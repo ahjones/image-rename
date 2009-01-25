@@ -104,4 +104,38 @@ class RenameImageTests < Test::Unit::TestCase
         renamer.rename(jpgFile)
 
     end
+
+    def test_ImagesWithIdenticalExifTimesShouldBeNamedUniquely
+        dir = mock()
+        file = mock()
+        exifr = mock()
+        exifobj1 = mock()
+        exifobj2 = mock()
+
+
+        jpgFiles = ['/home/ahj/file.jpg', '/home/ahj/file2.jpg']
+        mod1 = DateTime.new(2001, 01, 01, 01, 01, 12)
+        mod2 = DateTime.new(2001, 01, 01, 01, 01, 12)
+
+        file.expects(:directory?).with('/home/ahj/file.jpg').returns(false)
+        file.expects(:directory?).with('/home/ahj/file2.jpg').returns(false)
+
+        exifr.expects(:new).with(jpgFiles[0]).returns(exifobj1)
+        exifr.expects(:new).with(jpgFiles[1]).returns(exifobj2)
+
+        exifobj1.expects(:date_time).returns(mod1)
+        exifobj2.expects(:date_time).returns(mod2)
+
+        file.expects(:dirname).with(jpgFiles[0]).returns('/home/ahj0')
+        file.expects(:dirname).with(jpgFiles[1]).returns('/home/ahj0')
+
+        file.expects(:join).with('/home/ahj0', '20010101_010112.jpg').returns('/home/ahj0/20010101_010112.jpg')
+        file.expects(:join).with('/home/ahj0', '20010101_010112.jpg').returns('/home/ahj0/20010101_010112.jpg')
+
+        file.expects(:rename).with(jpgFiles[0],'/home/ahj0/20010101_010112_01.jpg')
+        file.expects(:rename).with(jpgFiles[1],'/home/ahj0/20010101_010112_02.jpg')
+        
+        renamer = Rnimg.new(file, exifr)
+        renamer.rename(*jpgFiles)
+    end
 end
